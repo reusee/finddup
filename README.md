@@ -1,0 +1,2 @@
+# finddup
+find duplicated files
