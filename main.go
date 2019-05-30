@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"sync"
 
 	"github.com/reusee/e"
@@ -135,14 +136,26 @@ func main() {
 		sem <- struct{}{}
 	}
 
+	var iss [][]int
 	for _, is := range byHash {
 		if len(is) == 1 {
 			continue
 		}
+		is := is
+		iss = append(iss, is)
+	}
+
+	sort.Slice(iss, func(i, j int) bool {
+		return files[iss[i][0]].Info.Size() < files[iss[j][0]].Info.Size()
+	})
+
+	for _, is := range iss {
+		sort.Slice(is, func(i, j int) bool {
+			return files[is[i]].Path < files[is[j]].Path
+		})
 		for _, i := range is {
 			pt("%q\n", files[i].Path)
 		}
 		pt("\n")
 	}
-
 }
