@@ -42,6 +42,8 @@ func main() {
 		for _, info := range infos {
 			if info.IsDir() {
 				collectFiles(filepath.Join(dir, info.Name()))
+			} else if info.Mode()&os.ModeType > 0 {
+				// skip non-regular files
 			} else {
 				files = append(files, &File{
 					Path: filepath.Join(dir, info.Name()),
