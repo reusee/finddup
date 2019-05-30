@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 
 	"github.com/reusee/e"
 )
@@ -68,42 +70,69 @@ func main() {
 		)
 	}
 
+	sem := make(chan struct{}, runtime.NumCPU())
+	var l sync.Mutex
 	byHash1 := make(map[uint64][]int)
 	for size, is := range bySize {
 		if size == 0 || len(is) == 1 {
 			continue
 		}
 		for _, i := range is {
-			f, err := os.Open(files[i].Path)
-			ce(err)
-			r := &io.LimitedReader{
-				R: f,
-				N: 64 * 1024 * 1024,
-			}
-			h := fnv.New64()
-			_, err = io.Copy(h, r)
-			ce(err)
-			f.Close()
-			sum := h.Sum64()
-			byHash1[sum] = append(byHash1[sum], i)
+			i := i
+			sem <- struct{}{}
+			go func() {
+				defer func() {
+					<-sem
+				}()
+				f, err := os.Open(files[i].Path)
+				ce(err)
+				r := &io.LimitedReader{
+					R: f,
+					N: 64 * 1024 * 1024,
+				}
+				h := fnv.New64()
+				_, err = io.Copy(h, r)
+				ce(err)
+				f.Close()
+				sum := h.Sum64()
+				l.Lock()
+				byHash1[sum] = append(byHash1[sum], i)
+				l.Unlock()
+			}()
 		}
 	}
+	for i := 0; i < cap(sem); i++ {
+		sem <- struct{}{}
+	}
 
+	sem = make(chan struct{}, runtime.NumCPU())
 	byHash := make(map[uint64][]int)
 	for _, is := range byHash1 {
 		if len(is) == 1 {
 			continue
 		}
 		for _, i := range is {
-			f, err := os.Open(files[i].Path)
-			ce(err)
-			h := fnv.New64()
-			_, err = io.Copy(h, f)
-			ce(err)
-			f.Close()
-			sum := h.Sum64()
-			byHash[sum] = append(byHash[sum], i)
+			i := i
+			sem <- struct{}{}
+			go func() {
+				defer func() {
+					<-sem
+				}()
+				f, err := os.Open(files[i].Path)
+				ce(err)
+				h := fnv.New64()
+				_, err = io.Copy(h, f)
+				ce(err)
+				f.Close()
+				sum := h.Sum64()
+				l.Lock()
+				byHash[sum] = append(byHash[sum], i)
+				l.Unlock()
+			}()
 		}
+	}
+	for i := 0; i < cap(sem); i++ {
+		sem <- struct{}{}
 	}
 
 	for _, is := range byHash {
