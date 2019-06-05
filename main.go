@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	me, we, ce, he = e.New(e.WithPackage("finddup"))
-	pt             = fmt.Printf
+	me     = e.Default.WithStack().WithName("finddup")
+	ce, he = e.New(me)
+	pt     = fmt.Printf
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 		dir = "."
 	}
 	dir, err := filepath.Abs(dir)
-	ce(err)
+	ce(err, "get abs dir: %s", dir)
 
 	type File struct {
 		Path string
@@ -86,14 +87,14 @@ func main() {
 					<-sem
 				}()
 				f, err := os.Open(files[i].Path)
-				ce(err)
+				ce(err, "open file: %s", files[i].Path)
 				r := &io.LimitedReader{
 					R: f,
 					N: 64 * 1024 * 1024,
 				}
 				h := fnv.New64()
 				_, err = io.Copy(h, r)
-				ce(err)
+				ce(err, "hash file: %s", files[i].Path)
 				f.Close()
 				sum := h.Sum64()
 				l.Lock()
@@ -120,10 +121,10 @@ func main() {
 					<-sem
 				}()
 				f, err := os.Open(files[i].Path)
-				ce(err)
+				ce(err, "open file: %s", files[i].Path)
 				h := fnv.New64()
 				_, err = io.Copy(h, f)
-				ce(err)
+				ce(err, "hash file: %s", files[i].Path)
 				f.Close()
 				sum := h.Sum64()
 				l.Lock()
