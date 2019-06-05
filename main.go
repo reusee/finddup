@@ -10,12 +10,12 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/reusee/e2"
+	"github.com/reusee/e/v2"
 )
 
 var (
-	me     = e2.Default.WithStack().WithName("finddup")
-	ce, he = e2.New(me)
+	me     = e.Default.WithStack().WithName("finddup")
+	ce, he = e.New(me)
 	pt     = fmt.Printf
 )
 
