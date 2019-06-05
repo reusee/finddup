@@ -2,3 +2,5 @@ github.com/reusee/e v0.0.0-20190518092242-d745464ec1cb h1:fgNE4HD9F+Hp3u05yTLoh6
 github.com/reusee/e v0.0.0-20190518092242-d745464ec1cb/go.mod h1:mppZXqwqYaXvqEaNsbZtoi3qeX0TfwzbuQTjOuSUcmI=
 github.com/reusee/e v0.0.0-20190605030117-cc3fe876074c h1:osWuAMbGkmSrbVeplkIHr/f5sFDjfRm7bVJe1PS9E8k=
 github.com/reusee/e v0.0.0-20190605030117-cc3fe876074c/go.mod h1:mppZXqwqYaXvqEaNsbZtoi3qeX0TfwzbuQTjOuSUcmI=
+github.com/reusee/e2 v0.0.0-20190605040540-d3f4fcdb6fd8 h1:LIXuP3wnTDHzxqkPvbXzO6+k5IXtNo6SbxFvIqsWE7M=
+github.com/reusee/e2 v0.0.0-20190605040540-d3f4fcdb6fd8/go.mod h1:VMeJzmPf9vmtjM+0sZ18eHpZU22+i385LfHka/KJKGw=
