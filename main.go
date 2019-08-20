@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -17,12 +18,16 @@ var (
 	me     = e.Default.WithStack().WithName("finddup")
 	ce, he = e.New(me)
 	pt     = fmt.Printf
+	fast   = flag.Bool("fast", false, "fast mode")
 )
 
 func main() {
+	flag.Parse()
+	args := flag.Args()
+
 	var dir string
-	if len(os.Args) > 1 {
-		dir = os.Args[1]
+	if len(args) > 1 {
+		dir = args[0]
 	} else {
 		dir = "."
 	}
@@ -107,34 +112,39 @@ func main() {
 		sem <- struct{}{}
 	}
 
-	sem = make(chan struct{}, runtime.NumCPU())
-	byHash := make(map[uint64][]int)
-	for _, is := range byHash1 {
-		if len(is) == 1 {
-			continue
-		}
-		for _, i := range is {
-			i := i
-			sem <- struct{}{}
-			go func() {
-				defer func() {
-					<-sem
+	var byHash map[uint64][]int
+	if !*fast {
+		sem = make(chan struct{}, runtime.NumCPU())
+		byHash = make(map[uint64][]int)
+		for _, is := range byHash1 {
+			if len(is) == 1 {
+				continue
+			}
+			for _, i := range is {
+				i := i
+				sem <- struct{}{}
+				go func() {
+					defer func() {
+						<-sem
+					}()
+					f, err := os.Open(files[i].Path)
+					ce(err, "open file: %s", files[i].Path)
+					h := fnv.New64()
+					_, err = io.Copy(h, f)
+					ce(err, "hash file: %s", files[i].Path)
+					f.Close()
+					sum := h.Sum64()
+					l.Lock()
+					byHash[sum] = append(byHash[sum], i)
+					l.Unlock()
 				}()
-				f, err := os.Open(files[i].Path)
-				ce(err, "open file: %s", files[i].Path)
-				h := fnv.New64()
-				_, err = io.Copy(h, f)
-				ce(err, "hash file: %s", files[i].Path)
-				f.Close()
-				sum := h.Sum64()
-				l.Lock()
-				byHash[sum] = append(byHash[sum], i)
-				l.Unlock()
-			}()
+			}
 		}
-	}
-	for i := 0; i < cap(sem); i++ {
-		sem <- struct{}{}
+		for i := 0; i < cap(sem); i++ {
+			sem <- struct{}{}
+		}
+	} else {
+		byHash = byHash1
 	}
 
 	var iss [][]int
